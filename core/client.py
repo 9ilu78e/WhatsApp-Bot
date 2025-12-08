@@ -7,7 +7,7 @@ load_dotenv()
 
 class WhatsAppClient:
     def __init__(self):
-        self.phone_id = os.getenv("PHONE_ID", "")
+        self.phone_id = os.getenv("WHATSAPP_PHONE_ID", "")
         self.token = os.getenv("WHATSAPP_TOKEN", "")
         self.verify_token = os.getenv("VERIFY_TOKEN", "")
         self.api_url = f"https://graph.facebook.com/v22.0/{self.phone_id}/messages"
