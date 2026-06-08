@@ -7,5 +7,4 @@ requests
 schedule
 pytz
 python-dateutil
-openai
 pywa

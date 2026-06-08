@@ -44,34 +44,56 @@ def on_startup():
 
 @app.get("/webhook")
 async def verify_webhook(request: Request):
-    token = request.query_params.get("hub.verify_token")
-    challenge = request.query_params.get("hub.challenge")
-    if token == os.getenv("VERIFY_TOKEN"):
-        return PlainTextResponse(challenge)
-    return PlainTextResponse("Invalid verification token", status_code=403)
+    params = request.query_params
+
+    mode = params.get("hub.mode")
+    token = params.get("hub.verify_token")
+    challenge = params.get("hub.challenge")
+
+    if mode == "subscribe" and token == os.getenv("VERIFY_TOKEN"):
+        return PlainTextResponse(str(challenge), media_type="text/plain")
+
+    return PlainTextResponse("Verification failed", status_code=403)
 
 @app.post("/webhook")
 async def handle_webhook(request: Request):
     try:
         data = await request.json()
-    except Exception as e:
-        logger.error(f"Invalid JSON payload: {e}")
+    except Exception:
         return JSONResponse({"error": "invalid json"}, status_code=400)
 
+    # Log the incoming payload for debugging
+    try:
+        logger.info(f"🔥 WEBHOOK RECEIVED: {data}")
+    except Exception:
+        pass
+
+    # Safe parsing of the WhatsApp webhook structure
     if data.get("object") == "whatsapp_business_account":
-        entries = data.get("entry", [])
+        entries = data.get("entry", []) or []
         for entry in entries:
-            changes = entry.get("changes", [])
+            changes = entry.get("changes", []) or []
             for change in changes:
-                value = change.get("value", {})
-                messages = value.get("messages", [])
-                statuses = value.get("statuses", [])
+                value = change.get("value") or {}
+                messages = value.get("messages") or []
+                statuses = value.get("statuses") or []
+
                 if messages:
                     for message in messages:
-                        asyncio.create_task(handle_incoming_message(message, value))
+                        # log basic info
+                        from_number = message.get("from")
+                        text = message.get("text", {}).get("body") if message.get("type") == "text" else None
+                        logger.info(f"📩 From: {from_number} | Type: {message.get('type')} | Text: {text}")
+                        # process message using existing handler (await to ensure execution)
+                        try:
+                            await handle_incoming_message(message, value)
+                        except Exception as e:
+                            logger.exception(f"Failed to process incoming message: {e}")
+
                 if statuses:
                     for status in statuses:
                         logger.info(f"Message status: {status}")
+
     return {"status": "ok"}
 
 @app.get("/health")

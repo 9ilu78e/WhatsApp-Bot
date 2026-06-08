@@ -7,7 +7,7 @@
     "interval_minutes": 0,
     "interval_seconds": 2,
     "check_done": false,
-    "sent_count": 0,
+    "sent_count": 1,
     "id": "2348149367427_1765285982"
   },
   {
@@ -18,7 +18,7 @@
     "interval_minutes": 0,
     "interval_seconds": 0,
     "check_done": false,
-    "sent_count": 0,
+    "sent_count": 1,
     "id": "2349056453575_1765243319"
   },
   {
@@ -29,7 +29,7 @@
     "interval_minutes": 0,
     "interval_seconds": 3,
     "check_done": false,
-    "sent_count": 0,
+    "sent_count": 1,
     "id": "2349056453575_1765286463"
   }
 ]

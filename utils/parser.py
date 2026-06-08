@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from dateutil import parser as date_parser
 import pytz
-from core.ai import parse_reminder_with_ai
+from core.local_ai import parse_reminder_with_ai
 import logging
 import re
 

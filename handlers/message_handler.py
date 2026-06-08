@@ -4,7 +4,7 @@ from utils.parser import parse_reminder_flexible
 from utils.formatter import format_reminders
 from utils.logger import logger
 from config.settings import ALLOWED_USERS
-from core.ai import chat_reply
+from core.local_ai import chat_reply
 from utils.greeting import get_greeting
 from utils.help import get_help
 from models.reminder import Reminder
@@ -92,8 +92,26 @@ async def process_text_message(from_number: str, text: str, message_id: str):
             wa_client.send_message(from_number, "Invalid delete reminder command.")
             return
 
-        ai_response = chat_reply(text, max_tokens=200)
-        wa_client.send_message(from_number, ai_response)
+        # Send immediate acknowledgement and perform AI reply in background
+        wa_client.send_message(from_number, "Got it — I'm processing your message and will reply shortly.")
+
+        async def _background_ai_reply(to, user_text):
+            try:
+                # Run blocking AI call in a thread to avoid blocking the event loop
+                reply = await asyncio.to_thread(chat_reply, user_text, 200)
+                if reply is None:
+                    # fallback: echo user message so user gets a helpful reply
+                    wa_client.send_message(to, f"I couldn't reach AI — you said: {user_text}")
+                else:
+                    wa_client.send_message(to, reply)
+            except Exception as e:
+                logger.exception(f"Background AI reply failed: {e}")
+                try:
+                    wa_client.send_message(to, "AI unavailable. Try later....")
+                except Exception:
+                    pass
+
+        asyncio.create_task(_background_ai_reply(from_number, text))
 
     except Exception as e:
         logger.exception(f"Error in process_text_message: {e}")

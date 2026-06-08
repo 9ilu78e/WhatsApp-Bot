@@ -11,10 +11,7 @@ def send_reminder(reminder):
         else:
             message = f"{reminder.task}"
             
-        wa_client.send_message(
-            to=reminder.user_phone,
-            text=message
-        )
+        wa_client.send_message(reminder.user_phone, message)
         logger.info(f"Sent reminder to {reminder.user_phone}: {reminder.task}")
     except Exception as e:
         logger.error(f"Failed to send reminder: {e}")
